@@ -30,17 +30,39 @@ class ProjectsSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 48),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isMobile ? 1 : 2,
-              crossAxisSpacing: 24,
-              mainAxisSpacing: 24,
-              childAspectRatio: isMobile ? 1.4 : 1.5,
-            ),
-            itemCount: AppData.projects.length,
-            itemBuilder: (_, i) => _ProjectCard(project: AppData.projects[i]),
+          isMobile
+              ? Column(
+            children: AppData.projects
+                .map((p) => Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: _ProjectCard(project: p),
+            ))
+                .toList(),
+          )
+              : Column(
+            children: [
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _ProjectCard(project: AppData.projects[0])),
+                    const SizedBox(width: 24),
+                    Expanded(child: _ProjectCard(project: AppData.projects[1])),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _ProjectCard(project: AppData.projects[2])),
+                    const SizedBox(width: 24),
+                    Expanded(child: _ProjectCard(project: AppData.projects[3])),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -109,9 +131,7 @@ class _ProjectCardState extends State<_ProjectCard> {
                     fontWeight: FontWeight.w800,
                     color: AppColors.white)),
             const SizedBox(height: 12),
-            Expanded(
-              child: Text(p.desc, style: AppText.body, overflow: TextOverflow.fade),
-            ),
+            Text(p.desc, style: AppText.body),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,

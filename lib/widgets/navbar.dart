@@ -39,12 +39,12 @@ class _NavBarState extends State<NavBar> {
               Rect.fromLTWH(0, 0, b.width, b.height),
             ),
             child: Text(
-              'DEV<CO/>',
+              'HIBUZ',
               style: TextStyle(
                 fontFamily: 'Courier',
                 fontSize: widget.isMobile ? 16 : 20,
                 fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
+                letterSpacing: 1.5,
               ),
             ),
           ),

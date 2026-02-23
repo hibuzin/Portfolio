@@ -29,20 +29,54 @@ class ServicesSection extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 56),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isMobile ? 1 : 3,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              childAspectRatio: isMobile ? 3 : 1.3,
-            ),
-            itemCount: AppData.services.length,
-            itemBuilder: (_, i) => _ServiceCard(service: AppData.services[i]),
-          ),
+          isMobile
+              ? Column(
+            children: AppData.services
+                .map((s) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _ServiceCard(service: s),
+            ))
+                .toList(),
+          )
+              : _DesktopGrid(),
         ],
       ),
+    );
+  }
+}
+
+class _DesktopGrid extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final s = AppData.services;
+    return Column(
+      children: [
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: _ServiceCard(service: s[0])),
+              const SizedBox(width: 20),
+              Expanded(child: _ServiceCard(service: s[1])),
+              const SizedBox(width: 20),
+              Expanded(child: _ServiceCard(service: s[2])),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: _ServiceCard(service: s[3])),
+              const SizedBox(width: 20),
+              Expanded(child: _ServiceCard(service: s[4])),
+              const SizedBox(width: 20),
+              Expanded(child: _ServiceCard(service: s[5])),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -79,6 +113,7 @@ class _ServiceCardState extends State<_ServiceCard> {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 48,
@@ -91,26 +126,30 @@ class _ServiceCardState extends State<_ServiceCard> {
               child: Icon(s.icon, color: s.accent, size: 22),
             ),
             const SizedBox(height: 20),
-            Text(s.title,
-                style: const TextStyle(
-                    fontFamily: 'Courier',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.white)),
-            const SizedBox(height: 10),
-            Expanded(
-              child: Text(s.desc, style: AppText.bodySmall,
-                  overflow: TextOverflow.fade),
+            Text(
+              s.title,
+              style: const TextStyle(
+                fontFamily: 'Courier',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.white,
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
+            Text(s.desc, style: AppText.bodySmall),
+            const SizedBox(height: 16),
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Learn more',
-                    style: TextStyle(
-                        fontSize: 12,
-                        color: s.accent,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5)),
+                Text(
+                  'Learn more',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: s.accent,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
                 const SizedBox(width: 6),
                 Icon(Icons.arrow_forward, color: s.accent, size: 14),
               ],
