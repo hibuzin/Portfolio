@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import '../core/constants.dart';
 import '../widgets/shared_widgets.dart';
 
@@ -35,40 +36,58 @@ class _HeroSectionState extends State<HeroSection>
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     final h = widget.isMobile ? AppSpacing.sectionHMobile : AppSpacing.sectionH;
+    final spot1Size = widget.isMobile ? 280.0 : 520.0;
+    final spot2Size = widget.isMobile ? 220.0 : 420.0;
+
     return Container(
       width: double.infinity,
       color: AppColors.bg,
       child: Stack(
+        clipBehavior: Clip.hardEdge,
         children: [
-          // Dot grid background
-          Positioned.fill(
-            child: CustomPaint(
-              painter: DotGridPainter(color: AppColors.white10),
-            ),
+
+          // Spotlight 1 — cyan tint
+          _Spotlight(
+            color: const Color(0xFF004D5C),
+            size: spot1Size,
+            screenW: size.width,
+            screenH: size.height,
+            xFreq: 1.0,
+            yFreq: 1.37,
+            xAmp: size.width * 0.42,
+            yAmp: size.height * 0.38,
+            centerX: size.width * 0.5,
+            centerY: size.height * 0.42,
+            period: 150.0,
+            phase: 0.0,
           ),
-          // Glow blobs
-          Positioned(
-            top: -100,
-            left: -100,
-            child: _Blob(color: AppColors.cyan.withOpacity(0.12), size: 500),
+
+          // Spotlight 2 — purple tint
+          _Spotlight(
+            color: const Color(0xFF2A1A4D),
+            size: spot2Size,
+            screenW: size.width,
+            screenH: size.height,
+            xFreq: 1.0,
+            yFreq: 1.61,
+            xAmp: size.width * 0.38,
+            yAmp: size.height * 0.35,
+            centerX: size.width * 0.5,
+            centerY: size.height * 0.5,
+            period: 150.0,
+            phase: math.pi * 0.7,
           ),
-          Positioned(
-            bottom: -80,
-            right: -80,
-            child: _Blob(color: AppColors.purple.withOpacity(0.1), size: 400),
-          ),
-          // Content
+
+          // Content on top
           Padding(
-            padding: EdgeInsets.fromLTRB(
-                h, widget.isMobile ? 120 : 140, h, 80),
+            padding: EdgeInsets.fromLTRB(h, widget.isMobile ? 120 : 140, h, 80),
             child: FadeTransition(
               opacity: _fade,
               child: SlideTransition(
                 position: _slide,
-                child: widget.isMobile
-                    ? _MobileHero()
-                    : _DesktopHero(),
+                child: widget.isMobile ? const _MobileHero() : const _DesktopHero(),
               ),
             ),
           ),
@@ -78,7 +97,183 @@ class _HeroSectionState extends State<HeroSection>
   }
 }
 
+// ─── Spotlight ────────────────────────────────────────────────────
+// Looks like a theatre/stage spotlight — bright center, sharp falloff
+class _Spotlight extends StatefulWidget {
+  final Color color;
+  final double size;
+  final double screenW;
+  final double screenH;
+  final double xFreq;
+  final double yFreq;
+  final double xAmp;
+  final double yAmp;
+  final double centerX;
+  final double centerY;
+  final double period;
+  final double phase;
+
+  const _Spotlight({
+    required this.color,
+    required this.size,
+    required this.screenW,
+    required this.screenH,
+    required this.xFreq,
+    required this.yFreq,
+    required this.xAmp,
+    required this.yAmp,
+    required this.centerX,
+    required this.centerY,
+    required this.period,
+    required this.phase,
+  });
+
+  @override
+  State<_Spotlight> createState() => _SpotlightState();
+}
+
+class _SpotlightState extends State<_Spotlight>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: (widget.period * 1000).toInt()),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Spotlight shape — sharp bright center, hard falloff at edges
+    // Uses multiple layered radial gradients for realistic light cone feel
+    final spotlight = SizedBox(
+      width: widget.size,
+      height: widget.size,
+      child: CustomPaint(
+        painter: _SpotlightPainter(color: widget.color, size: widget.size),
+      ),
+    );
+
+    return AnimatedBuilder(
+      animation: _ctrl,
+      child: spotlight,
+      builder: (context, child) {
+        final t = _ctrl.value * 2 * math.pi + widget.phase;
+        final x = widget.centerX + math.sin(widget.xFreq * t) * widget.xAmp;
+        final y = widget.centerY + math.sin(widget.yFreq * t + 0.8) * widget.yAmp;
+
+        return Positioned(
+          left: x - widget.size / 2,
+          top:  y - widget.size / 2,
+          child: child!,
+        );
+      },
+    );
+  }
+}
+
+// ─── Spotlight Painter ────────────────────────────────────────────
+class _SpotlightPainter extends CustomPainter {
+  final Color color;
+  final double size;
+
+  const _SpotlightPainter({required this.color, required this.size});
+
+  @override
+  void paint(Canvas canvas, Size canvasSize) {
+    final center = Offset(size / 2, size / 2);
+    final r = size / 2;
+
+    // Draw many rays from center outward — different lengths, random angles
+    // This breaks the circular silhouette completely
+    _drawRays(canvas, center, r);
+
+    // Soft inner core glow — very small, heavily blurred
+    final corePaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          color.withOpacity(0.85),
+          color.withOpacity(0.30),
+          color.withOpacity(0.0),
+        ],
+        stops: const [0.0, 0.40, 1.0],
+      ).createShader(Rect.fromCircle(center: center, radius: r * 0.22))
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.12);
+    canvas.drawCircle(center, r * 0.22, corePaint);
+
+    // Mid haze — blurred heavily so shape disappears
+    final midPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          color.withOpacity(0.40),
+          color.withOpacity(0.0),
+        ],
+        stops: const [0.0, 1.0],
+      ).createShader(Rect.fromCircle(center: center, radius: r * 0.45))
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.30);
+    canvas.drawCircle(center, r * 0.45, midPaint);
+  }
+
+  void _drawRays(Canvas canvas, Offset center, double r) {
+    // 32 rays — varying lengths so it looks like a real sun burst
+    const rayCount = 32;
+    // Pre-defined length multipliers — irregular pattern
+    const lengths = [
+      0.95, 0.60, 0.82, 0.45, 0.98, 0.55, 0.75, 0.40,
+      0.90, 0.62, 0.88, 0.50, 0.70, 0.42, 0.93, 0.58,
+      0.80, 0.48, 0.85, 0.52, 0.72, 0.44, 0.96, 0.56,
+      0.78, 0.46, 0.87, 0.53, 0.68, 0.41, 0.92, 0.60,
+    ];
+
+    for (int i = 0; i < rayCount; i++) {
+      final angle = (i / rayCount) * 2 * math.pi;
+      final len = r * lengths[i % lengths.length];
+
+      // Ray width tapers — thick near center, thin at tip
+      final rayPaint = Paint()
+        ..shader = RadialGradient(
+          colors: [
+            color.withOpacity(0.70),
+            color.withOpacity(0.15),
+            color.withOpacity(0.0),
+          ],
+          stops: const [0.0, 0.55, 1.0],
+          center: Alignment.centerLeft,
+          focal: Alignment.centerLeft,
+          radius: 1.0,
+        ).createShader(Rect.fromPoints(center,
+            center + Offset(math.cos(angle) * len, math.sin(angle) * len)))
+        ..strokeWidth = (i % 3 == 0) ? 18 : (i % 2 == 0) ? 10 : 5
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8);
+
+      canvas.drawLine(
+        center,
+        center + Offset(math.cos(angle) * len, math.sin(angle) * len),
+        rayPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SpotlightPainter old) =>
+      old.color != color || old.size != size;
+}
+
+// ─── Hero Content ─────────────────────────────────────────────────
 class _DesktopHero extends StatelessWidget {
+  const _DesktopHero();
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -91,15 +286,10 @@ class _DesktopHero extends StatelessWidget {
           children: [
             Expanded(
               flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GradientText(
-                    text: 'We Build\nSoftware\nThat Scales.',
-                    style: AppText.display,
-                    gradient: AppColors.gradient1,
-                  ),
-                ],
+              child: GradientText(
+                text: 'We Build\nSoftware\nThat Scales.',
+                style: AppText.display,
+                gradient: AppColors.gradient1,
               ),
             ),
             const SizedBox(width: 60),
@@ -117,8 +307,7 @@ class _DesktopHero extends StatelessWidget {
                     children: [
                       CyberButton(label: 'View Our Work', onTap: () {}),
                       const SizedBox(width: 16),
-                      CyberButton(
-                          label: 'Get In Touch', onTap: () {}, outlined: true),
+                      CyberButton(label: 'Get In Touch', onTap: () {}, outlined: true),
                     ],
                   ),
                 ],
@@ -134,6 +323,8 @@ class _DesktopHero extends StatelessWidget {
 }
 
 class _MobileHero extends StatelessWidget {
+  const _MobileHero();
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -197,24 +388,6 @@ class _StatsRow extends StatelessWidget {
           ],
         );
       }).toList(),
-    );
-  }
-}
-
-class _Blob extends StatelessWidget {
-  final Color color;
-  final double size;
-  const _Blob({required this.color, required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
     );
   }
 }
