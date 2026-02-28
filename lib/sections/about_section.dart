@@ -59,7 +59,7 @@ class _AboutContent extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         const Text(
-          'DevCo is a full-stack software development company born in Chennai, operating globally. We partner with startups and enterprises to design, build, and scale digital products that matter.',
+          'Hibuz is a full-stack software development company born in Chennai, operating globally. We partner with startups and enterprises to design, build, and scale digital products that matter.',
           style: AppText.body,
         ),
         const SizedBox(height: 16),
@@ -139,7 +139,7 @@ class _TerminalCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 _Dot(color: const Color(0xFF28C840)),
                 const SizedBox(width: 12),
-                const Text('devco ~ stats',
+                const Text('hibuz ~ stats',
                     style: TextStyle(
                         fontFamily: 'Courier',
                         fontSize: 12,
@@ -153,7 +153,7 @@ class _TerminalCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _TerminalLine(prompt: '\$', command: 'devco --info', delay: 0),
+                _TerminalLine(prompt: '\$', command: 'hibuz --info', delay: 0),
                 const SizedBox(height: 12),
                 _TerminalStat(key_: 'founded', value: '2016'),
                 _TerminalStat(key_: 'location', value: 'Chennai, IN'),

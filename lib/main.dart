@@ -7,7 +7,6 @@ import 'sections/about_section.dart';
 import 'sections/services_section.dart';
 import 'sections/projects_section.dart';
 import 'sections/tech_section.dart';
-import 'sections/testimonials_section.dart';
 import 'sections/contact_section.dart';
 
 void main() {
@@ -20,7 +19,7 @@ class DevCoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'DevCo — Software Development Company',
+      title: 'Hibuz — Software Development Company',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
@@ -46,22 +45,37 @@ class PortfolioPage extends StatefulWidget {
 class _PortfolioPageState extends State<PortfolioPage> {
   final _scrollController = ScrollController();
 
-  // Section keys for scroll-to navigation
-  // Index: 0=About, 1=Services, 2=Projects, 3=Tech, 4=Testimonials, 5=Contact
-  final List<GlobalKey> _keys = List.generate(6, (_) => GlobalKey());
+  // One key per section — same order as navbar
+  final _servicesKey = GlobalKey();
+  final _projectsKey = GlobalKey();
+  final _aboutKey    = GlobalKey();
+  final _techKey     = GlobalKey();
+  final _contactKey  = GlobalKey();
+
+  // Fixed list — created once, not on every scroll
+  late final List<GlobalKey> _sectionKeys;
+
   int _activeNav = 0;
 
   @override
   void initState() {
     super.initState();
+    _sectionKeys = [
+      _servicesKey,
+      _projectsKey,
+      _aboutKey,
+      _techKey,
+      _contactKey,
+    ];
     _scrollController.addListener(_onScroll);
   }
 
   void _onScroll() {
-    for (int i = 0; i < _keys.length; i++) {
-      final ctx = _keys[i].currentContext;
+    for (int i = 0; i < _sectionKeys.length; i++) {
+      final ctx = _sectionKeys[i].currentContext;
       if (ctx == null) continue;
-      final box = ctx.findRenderObject() as RenderBox;
+      final box = ctx.findRenderObject() as RenderBox?;
+      if (box == null) continue;
       final pos = box.localToGlobal(Offset.zero);
       if (pos.dy <= 130) {
         if (_activeNav != i) setState(() => _activeNav = i);
@@ -70,7 +84,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
   }
 
   void _scrollToSection(int index) {
-    final ctx = _keys[index].currentContext;
+    if (index < 0 || index >= _sectionKeys.length) return;
+    final ctx = _sectionKeys[index].currentContext;
     if (ctx != null) {
       Scrollable.ensureVisible(
         ctx,
@@ -79,6 +94,10 @@ class _PortfolioPageState extends State<PortfolioPage> {
       );
     }
   }
+
+  void _scrollToProjects() => _scrollToSection(1);
+  void _scrollToAbout()    => _scrollToSection(2);
+  void _scrollTocontact() => _scrollToSection(4);
 
   @override
   void dispose() {
@@ -95,27 +114,26 @@ class _PortfolioPageState extends State<PortfolioPage> {
       backgroundColor: AppColors.bg,
       body: Stack(
         children: [
-          // ── Scrollable content ──
           SingleChildScrollView(
             controller: _scrollController,
             child: Column(
               children: [
-                HeroSection(isMobile: isMobile),
-                AboutSection(key: _keys[0], isMobile: isMobile),
-                ServicesSection(key: _keys[1], isMobile: isMobile),
-                ProjectsSection(key: _keys[2], isMobile: isMobile),
-                TechSection(key: _keys[3], isMobile: isMobile),
-                TestimonialsSection(key: _keys[4], isMobile: isMobile),
-                ContactSection(key: _keys[5], isMobile: isMobile),
+                HeroSection(
+                  isMobile: isMobile,
+                  onViewWork: _scrollToProjects,
+                  onGetInTouch: _scrollTocontact,
+                ),
+                ServicesSection(key: _servicesKey, isMobile: isMobile),
+                ProjectsSection(key: _projectsKey, isMobile: isMobile),
+                AboutSection(key: _aboutKey, isMobile: isMobile),
+                TechSection(key: _techKey, isMobile: isMobile),
+                ContactSection(key: _contactKey, isMobile: isMobile),
                 FooterWidget(isMobile: isMobile),
               ],
             ),
           ),
-          // ── Sticky NavBar ──
           Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
+            top: 0, left: 0, right: 0,
             child: NavBar(
               activeIndex: _activeNav,
               onTap: _scrollToSection,

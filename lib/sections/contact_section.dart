@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 import '../core/constants.dart';
 import '../widgets/shared_widgets.dart';
 
@@ -43,25 +46,15 @@ class _ContactInfo extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         const Text(
-          'Got a project in mind? Tell us about it — we\'ll get back to you within 24 hours.',
+          'Got a project in mind? Tell us about it — we\'ll get back Asap.',
           style: AppText.body,
         ),
         const SizedBox(height: 40),
-        _InfoRow(icon: Icons.email_outlined, text: 'hello@devco.in'),
+        _InfoRow(icon: Icons.email_outlined, text: 'hibuzin@gmail.com'),
         const SizedBox(height: 16),
-        _InfoRow(icon: Icons.phone_outlined, text: '+91 98765 43210'),
+        _InfoRow(icon: Icons.phone_outlined, text: '+91 8526854562'),
         const SizedBox(height: 16),
-        _InfoRow(icon: Icons.location_on_outlined, text: 'Chennai, Tamil Nadu, India'),
-        const SizedBox(height: 32),
-        Row(
-          children: [
-            _SocialIcon(icon: Icons.code, label: 'GitHub'),
-            const SizedBox(width: 12),
-            _SocialIcon(icon: Icons.work_outline, label: 'LinkedIn'),
-            const SizedBox(width: 12),
-            _SocialIcon(icon: Icons.alternate_email, label: 'Twitter'),
-          ],
-        ),
+        _InfoRow(icon: Icons.location_on_outlined, text: 'Chennai, India'),
       ],
     );
   }
@@ -119,7 +112,56 @@ class _SocialIconState extends State<_SocialIcon> {
   }
 }
 
-class _ContactForm extends StatelessWidget {
+class _ContactForm extends StatefulWidget {
+  @override
+  State<_ContactForm> createState() => _ContactFormState();
+}
+
+class _ContactFormState extends State<_ContactForm> {
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final messageController = TextEditingController();
+
+  bool loading = false;
+
+  Future<void> sendMessage() async {
+    setState(() => loading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse("https://land-backo.onrender.com/api/contact"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "name": nameController.text,
+          "email": emailController.text,
+          "message": messageController.text,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data["success"] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Message sent successfully")),
+        );
+
+        nameController.clear();
+        emailController.clear();
+        messageController.clear();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data["message"] ?? "Failed")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+
+    setState(() => loading = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -138,30 +180,38 @@ class _ContactForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Start a Project',
+          const Text('ANY QUARIES',
               style: TextStyle(
                   fontFamily: 'Courier',
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
                   color: AppColors.white)),
           const SizedBox(height: 28),
-          Row(
-            children: [
-              Expanded(child: _CyberInput(hint: 'Your Name')),
-              const SizedBox(width: 16),
-              Expanded(child: _CyberInput(hint: 'Company')),
-            ],
+
+          _CyberInput(hint: 'Your Name', controller: nameController),
+          const SizedBox(height: 16),
+
+          _CyberInput(hint: 'Email Address', controller: emailController),
+          const SizedBox(height: 16),
+
+          _CyberInput(
+            hint: 'Tell us about your project...',
+            maxLines: 4,
+            controller: messageController,
           ),
-          const SizedBox(height: 16),
-          _CyberInput(hint: 'Email Address'),
-          const SizedBox(height: 16),
-          _CyberInput(hint: 'Project Budget'),
-          const SizedBox(height: 16),
-          _CyberInput(hint: 'Tell us about your project...', maxLines: 4),
+
           const SizedBox(height: 24),
+
           SizedBox(
             width: double.infinity,
-            child: CyberButton(label: 'Send Message →', onTap: () {}),
+            child: CyberButton(
+              label: loading ? 'Sending...' : 'Send Message →',
+              onTap: loading
+                  ? () {}
+                  : () {
+                sendMessage();
+              },
+            ),
           ),
         ],
       ),
@@ -172,11 +222,18 @@ class _ContactForm extends StatelessWidget {
 class _CyberInput extends StatelessWidget {
   final String hint;
   final int maxLines;
-  const _CyberInput({required this.hint, this.maxLines = 1});
+  final TextEditingController? controller;
+
+  const _CyberInput({
+    required this.hint,
+    this.maxLines = 1,
+    this.controller,
+  });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: controller,
       maxLines: maxLines,
       style: const TextStyle(
           fontFamily: 'Courier',

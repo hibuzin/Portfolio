@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/constants.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-const _navItems = ['About', 'Services', 'Projects', 'Tech', 'Testimonials', 'Contact'];
+const _navItems = [ 'SERVICES', 'PROJECTS','ABOUT', 'TECH', 'CONTACT'];
 
 class NavBar extends StatefulWidget {
   final int activeIndex;
@@ -21,6 +22,12 @@ class NavBar extends StatefulWidget {
 
 class _NavBarState extends State<NavBar> {
   int? _hovered;
+
+  void _handleTap(int index) async {
+    /// Small delay improves last section animation feel (Contact)
+    await Future.delayed(const Duration(milliseconds: 10));
+    widget.onTap(index);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,16 +62,18 @@ class _NavBarState extends State<NavBar> {
               final label = e.value;
               final active = widget.activeIndex == i;
               final hovered = _hovered == i;
+
               return MouseRegion(
                 onEnter: (_) => setState(() => _hovered = i),
                 onExit: (_) => setState(() => _hovered = null),
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
-                  onTap: () => widget.onTap(i),
+                  onTap: () => _handleTap(i),
                   child: Padding(
                     padding: const EdgeInsets.only(left: 36),
                     child: AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -87,7 +96,7 @@ class _NavBarState extends State<NavBar> {
             PopupMenuButton<int>(
               icon: const Icon(Icons.menu, color: AppColors.white),
               color: AppColors.card,
-              onSelected: widget.onTap,
+              onSelected: _handleTap,
               itemBuilder: (_) => _navItems
                   .asMap()
                   .entries
@@ -117,29 +126,51 @@ class _HireCTA extends StatefulWidget {
 class _HireCTAState extends State<_HireCTA> {
   bool _hovered = false;
 
+  Future<void> _openLink() async {
+    final Uri url = Uri.parse("https://react-jewellery.onrender.com");
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       cursor: SystemMouseCursors.click,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
-        decoration: BoxDecoration(
-          gradient: _hovered ? AppColors.gradient2 : AppColors.gradient1,
-          borderRadius: BorderRadius.circular(4),
-          boxShadow: _hovered
-              ? [BoxShadow(color: AppColors.cyan.withOpacity(0.3), blurRadius: 16)]
-              : [],
-        ),
-        child: const Text(
-          'HIRE US',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 2,
-            color: Colors.black,
+      child: GestureDetector(
+        onTap: _openLink, // ✅ CLICK ADDED
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          padding:
+          const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
+          decoration: BoxDecoration(
+            gradient:
+            _hovered ? AppColors.gradient2 : AppColors.gradient1,
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: _hovered
+                ? [
+              BoxShadow(
+                color: AppColors.cyan.withOpacity(0.3),
+                blurRadius: 16,
+              )
+            ]
+                : [],
+          ),
+          child: const Text(
+            'LIVE PROJECT',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
+              color: Colors.black,
+            ),
           ),
         ),
       ),

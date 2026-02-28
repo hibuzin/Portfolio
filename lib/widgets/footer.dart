@@ -25,7 +25,7 @@ class FooterWidget extends StatelessWidget {
       blendMode: BlendMode.srcIn,
       shaderCallback: (b) => AppColors.gradient1
           .createShader(Rect.fromLTWH(0, 0, b.width, b.height)),
-      child: const Text('DEV<CO/>',
+      child: const Text('HIBUZ>',
           style: TextStyle(
               fontFamily: 'Courier',
               fontSize: 18,
@@ -34,7 +34,7 @@ class FooterWidget extends StatelessWidget {
     if (!isMobile) const Spacer(),
     if (isMobile) const SizedBox(height: 12),
     const Text(
-      '© 2025 DevCo. All rights reserved. · Made in Chennai 🇮🇳',
+      '© 2025 hibuz. All rights reserved. · Made in Chennai 🇮🇳',
       style: TextStyle(color: AppColors.white50, fontSize: 12),
     ),
   ];

@@ -39,11 +39,11 @@ class AppText {
 
   static const display = TextStyle(
     fontFamily: 'Courier',
-    fontSize: 64,
+    fontSize: 54,
     fontWeight: FontWeight.w900,
     color: AppColors.white,
     height: 1.0,
-    letterSpacing: -2,
+    letterSpacing: 1,
   );
 
   static const displayMobile = TextStyle(
@@ -61,7 +61,7 @@ class AppText {
     fontWeight: FontWeight.w800,
     color: AppColors.white,
     height: 1.1,
-    letterSpacing: -1,
+    letterSpacing: 2,
   );
 
   static const headingMobile = TextStyle(
